@@ -7,6 +7,9 @@ kotlin = "1.7.20"
 javers = "6.8.2"
 slf4j = "2.0.5"
 
+spring-boot = "2.7.8"
+springdoc = "1.6.14"
+
 [libraries]
 apache-commons-lang = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 
@@ -17,10 +20,20 @@ javers-core = { module = "org.javers:javers-core", version.ref = "javers" }
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+
+# Open API
+springdoc-core = { module = "org.springdoc:springdoc-openapi-webmvc-core", version.ref = "springdoc" }
+# Spring family
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+
+
 # Gradle plugins
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 [plugins]
 lombok = { id = "io.freefair.lombok", version = "6.6.1" }
+springboot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 
 [bundles]
 junit-jupiter = ["junit-jupiter-api", "junit-jupiter-engine"]

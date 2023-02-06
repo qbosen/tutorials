@@ -6,5 +6,6 @@ pluginManagement {
     }
 }
 include(
-    ":libraries"
+    ":libraries",
+    ":spring-web:spring-requestparam-object"
 )
