@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 public class CustomPrinter {
     public static String customPrint(Diff diff) {
         PrettyValuePrinter printer = createPrettyValuePrinter();
-        ChangePrinterHolder holder = ChangePrinterHolder.getInstance();
+        ChangePrinterHolder holder = new ChangePrinterHolder();
         StringBuilder stringBuilder = new StringBuilder();
         diff.groupByObject().forEach(
                 changesByObject -> stringBuilder.append(format(printer, changesByObject, holder))
@@ -103,6 +103,11 @@ class ClassHierarchy {
         return Map.of(Object.class, childHierarchy(Object.class));
     }
 
+    private List<Map> childHierarchy(Class type) {
+        if (!inheritance.containsKey(type)) return Collections.emptyList();
+        return inheritance.get(type).stream().map(child -> Map.of(child, childHierarchy(child))).collect(Collectors.toList());
+    }
+
     public String printHierarchy() {
         StringBuilder sb = new StringBuilder();
         printHierarchy(sb, 0, hierarchy());
@@ -115,11 +120,6 @@ class ClassHierarchy {
             v.forEach(sub -> printHierarchy(sb, level + 1, sub));
         });
     }
-
-    private List<Map> childHierarchy(Class type) {
-        if (!inheritance.containsKey(type)) return Collections.emptyList();
-        return inheritance.get(type).stream().map(child -> Map.of(child, childHierarchy(child))).collect(Collectors.toList());
-    }
 }
 
 interface ChangePrinter<T> {
@@ -130,32 +130,29 @@ interface ChangePrinter<T> {
 
 
 class ChangePrinterHolder {
-    private static class Holder {
-        private static final ChangePrinterHolder INSTANCE = new ChangePrinterHolder();
-    }
-
-    public static ChangePrinterHolder getInstance() {
-        return Holder.INSTANCE;
-    }
 
     final Map<Class, ChangePrinter> holder = new HashMap<>();
     final ClassHierarchy classHierarchy = new ClassHierarchy();
 
 
-    private ChangePrinterHolder() {
-        register(NewObject.class, ChangePrinterHolder::newObjectPrinter);
-        register(ContainerElementChange.class, ChangePrinterHolder::containerElementChangePrinter);
-        register(ObjectRemoved.class, ChangePrinterHolder::objectRemovedPrinter);
-        register(ReferenceChange.class, ChangePrinterHolder::referenceChangePrinter);
-        register(ValueChange.class, ChangePrinterHolder::valueChangePrinter);
-        register(ContainerChange.class, ChangePrinterHolder::containerChangePrinter);
-        register(KeyValueChange.class, ChangePrinterHolder::keyValueChangePrinter);
-        register(ElementValueChange.class, ChangePrinterHolder::elementValueChangePrinter);
-        register(ValueAdded.class, ChangePrinterHolder::valueAddedPrinter);
-        register(ValueRemoved.class, ChangePrinterHolder::valueRemovedPrinter);
-        register(EntryAdded.class, ChangePrinterHolder::entryAddedPrinter);
-        register(EntryRemoved.class, ChangePrinterHolder::entryRemovedPrinter);
-        register(EntryValueChange.class, ChangePrinterHolder::entryValueChangePrinter);
+    public ChangePrinterHolder() {
+        initRegister();
+    }
+
+    private void initRegister() {
+        register(NewObject.class, this::newObjectPrinter);
+        register(ContainerElementChange.class, this::containerElementChangePrinter);
+        register(ObjectRemoved.class, this::objectRemovedPrinter);
+        register(ReferenceChange.class, this::referenceChangePrinter);
+        register(ValueChange.class, this::valueChangePrinter);
+        register(ContainerChange.class, this::containerChangePrinter);
+        register(KeyValueChange.class, this::keyValueChangePrinter);
+        register(ElementValueChange.class, this::elementValueChangePrinter);
+        register(ValueAdded.class, this::valueAddedPrinter);
+        register(ValueRemoved.class, this::valueRemovedPrinter);
+        register(EntryAdded.class, this::entryAddedPrinter);
+        register(EntryRemoved.class, this::entryRemovedPrinter);
+        register(EntryValueChange.class, this::entryValueChangePrinter);
     }
 
     public String prettyPrint(Object change, PrettyValuePrinter valuePrinter) {
@@ -165,12 +162,12 @@ class ChangePrinterHolder {
                 .orElse("");
     }
 
-    private <T> void register(ChangePrinter<T> printer) {
+    public <T> void register(ChangePrinter<T> printer) {
         classHierarchy.register(printer.matchType());
         holder.put(printer.matchType(), printer);
     }
 
-    private <T> void register(Class<T> type, BiFunction<T, PrettyValuePrinter, String> printer) {
+    public <T> void register(Class<T> type, BiFunction<T, PrettyValuePrinter, String> printer) {
         register(new ChangePrinter<T>() {
             @Override
             public Class<T> matchType() {
@@ -184,20 +181,20 @@ class ChangePrinterHolder {
         });
     }
 
-    private static String newObjectPrinter(NewObject change, PrettyValuePrinter printer) {
+    private  String newObjectPrinter(NewObject change, PrettyValuePrinter printer) {
         return "新增: " + change.getAffectedGlobalId().value();
     }
 
 
-    private static String containerElementChangePrinter(ContainerElementChange change, PrettyValuePrinter valuePrinter) {
+    private  String containerElementChangePrinter(ContainerElementChange change, PrettyValuePrinter valuePrinter) {
         return "===holder print===";
     }
 
-    private static String objectRemovedPrinter(ObjectRemoved change, PrettyValuePrinter printer) {
+    private  String objectRemovedPrinter(ObjectRemoved change, PrettyValuePrinter printer) {
         return "删除: " + change.getAffectedGlobalId().value();
     }
 
-    private static String referenceChangePrinter(ReferenceChange change, PrettyValuePrinter valuePrinter) {
+    private  String referenceChangePrinter(ReferenceChange change, PrettyValuePrinter valuePrinter) {
 
         if (change.isPropertyAdded()) {
             return valuePrinter.formatWithQuotes(change.getPropertyNameWithPath()) +
@@ -220,7 +217,7 @@ class ChangePrinterHolder {
         }
     }
 
-    private static String valueChangePrinter(ValueChange change, PrettyValuePrinter valuePrinter) {
+    private  String valueChangePrinter(ValueChange change, PrettyValuePrinter valuePrinter) {
         if (change.isPropertyAdded()) {
             return valuePrinter.formatWithQuotes(change.getPropertyNameWithPath()) +
                     " 新增值 " + valuePrinter.formatWithQuotes(change.getRight());
@@ -242,7 +239,7 @@ class ChangePrinterHolder {
         }
     }
 
-    private static String containerChangePrinter(ContainerChange change, PrettyValuePrinter valuePrinter) {
+    private  String containerChangePrinter(ContainerChange change, PrettyValuePrinter valuePrinter) {
 
         StringBuilder builder = new StringBuilder();
 
@@ -250,50 +247,50 @@ class ChangePrinterHolder {
 
         List<ContainerElementChange> changes = change.getChanges();
         changes.forEach(cc ->
-                builder.append("   " + getInstance().prettyPrint(cc, valuePrinter) + "\n"));
+                builder.append("   " + prettyPrint(cc, valuePrinter) + "\n"));
 
         String result = builder.toString();
         return result.substring(0, result.length() - 1);
     }
 
-    private static String keyValueChangePrinter(KeyValueChange change, PrettyValuePrinter valuePrinter) {
+    private  String keyValueChangePrinter(KeyValueChange change, PrettyValuePrinter valuePrinter) {
         StringBuilder builder = new StringBuilder();
 
         builder.append(valuePrinter.formatWithQuotes(change.getPropertyNameWithPath()) + " map changes :\n");
         List<EntryChange> changes = change.getEntryChanges();
-        changes.forEach(cc -> builder.append("   " + getInstance().prettyPrint(cc, valuePrinter) + "\n"));
+        changes.forEach(cc -> builder.append("   " + prettyPrint(cc, valuePrinter) + "\n"));
 
         String result = builder.toString();
         return result.substring(0, result.length() - 1);
     }
 
-    private static String elementValueChangePrinter(ElementValueChange change, PrettyValuePrinter valuePrinter) {
+    private  String elementValueChangePrinter(ElementValueChange change, PrettyValuePrinter valuePrinter) {
         return change.getIndex() + ". " +
                 valuePrinter.formatWithQuotes(change.getLeftValue()) + " 修改为 " +
                 valuePrinter.formatWithQuotes(change.getRightValue());
     }
 
-    private static String valueAddedPrinter(ValueAdded change, PrettyValuePrinter valuePrinter) {
+    private  String valueAddedPrinter(ValueAdded change, PrettyValuePrinter valuePrinter) {
         return (change.getIndex() == null ? "· " : change.getIndex() + ". ") +
                 valuePrinter.formatWithQuotes(change.getAddedValue()) + " 添加了";
     }
 
-    private static String valueRemovedPrinter(ValueRemoved change, PrettyValuePrinter valuePrinter) {
+    private  String valueRemovedPrinter(ValueRemoved change, PrettyValuePrinter valuePrinter) {
         return (change.getIndex() == null ? "· " : change.getIndex() + ". ") +
                 valuePrinter.formatWithQuotes(change.getRemovedValue()) + " 删除了";
     }
 
-    private static String entryAddedPrinter(EntryAdded change, PrettyValuePrinter valuePrinter) {
+    private  String entryAddedPrinter(EntryAdded change, PrettyValuePrinter valuePrinter) {
         return "· entry [" + valuePrinter.formatWithQuotes(change.getKey()) + " : " +
                 valuePrinter.formatWithQuotes(change.getValue()) + "] 添加了";
     }
 
-    private static String entryRemovedPrinter(EntryRemoved change, PrettyValuePrinter valuePrinter) {
+    private  String entryRemovedPrinter(EntryRemoved change, PrettyValuePrinter valuePrinter) {
         return "· entry [" + valuePrinter.formatWithQuotes(change.getKey()) + " : " +
                 valuePrinter.formatWithQuotes(change.getValue()) + "] 删除";
     }
 
-    private static String entryValueChangePrinter(EntryValueChange change, PrettyValuePrinter valuePrinter) {
+    private  String entryValueChangePrinter(EntryValueChange change, PrettyValuePrinter valuePrinter) {
         return "· entry [" + valuePrinter.formatWithQuotes(change.getKey()) + " : " +
                 valuePrinter.formatWithQuotes(change.getLeftValue()) + "] -> [" +
                 valuePrinter.formatWithQuotes(change.getKey()) + " : " +
