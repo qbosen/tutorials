@@ -31,6 +31,8 @@ class ControllerTest {
                         .accept(MediaType.APPLICATION_JSON)
                         .queryParam("query", "some query string")
                         .queryParam("nest.filter", "nested")
+                        .queryParam("nameCase.camelCase", "camel")
+                        .queryParam("name_case.snake_case", "snake")
                         .queryParam("page", "1")
                         .queryParam("size", "10")
         ).andExpectAll(
@@ -38,6 +40,8 @@ class ControllerTest {
                 jsonPath("$.name").value("request-param"),
                 jsonPath("$.query.query").isString(),
                 jsonPath("$.query.nest.filter").value("nested"),
+                jsonPath("$.query.name_case.camel_case").value("camel"),
+                jsonPath("$.query.name_case.snake_case").value("snake"),
                 jsonPath("$.query.page").isNumber()
         ).andReturn();
     }
@@ -49,6 +53,8 @@ class ControllerTest {
                         .accept(MediaType.APPLICATION_JSON)
                         .queryParam("query", "some query string")
                         .queryParam("nest.filter", "nested")
+                        .queryParam("nameCase.camelCase", "camel")
+                        .queryParam("name_case.snake_case", "snake")
                         .queryParam("page", "1")
                         .queryParam("size", "10")
         ).andExpectAll(
@@ -56,6 +62,8 @@ class ControllerTest {
                 jsonPath("$.name").value("request-object"),
                 jsonPath("$.query.query").isString(),
                 jsonPath("$.query.nest.filter").value("nested"),
+                jsonPath("$.query.name_case.camel_case").value("camel"),
+                jsonPath("$.query.name_case.snake_case").value("snake"),
                 jsonPath("$.query.page").isNumber()
         ).andReturn();
     }
@@ -69,7 +77,10 @@ class ControllerTest {
                 status().isOk(),
                 jsonPath("$.paths.['/request-object']").exists(),
                 jsonPath("$.components.schemas.NestQuery.properties.filter.description")
-                        .value("nest query filter")
+                        .value("nest query filter"),
+                jsonPath("$.components.schemas.NameCase.properties.camelCase.description")
+                        .value("request param is camelCase")
+
         ).andReturn();
     }
 

@@ -3,6 +3,7 @@ package top.abosen.requestparamobject;
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * @author qiubaisen
@@ -10,12 +11,17 @@ import org.springframework.context.annotation.Configuration;
  */
 
 @Configuration
-public class SpringDocConfiguration {
+public class BeanConfiguration {
     @Bean
     public GroupedOpenApi api() {
         return GroupedOpenApi.builder()
                 .group("test")
                 .packagesToScan("top.abosen")
                 .build();
+    }
+
+    @Bean
+    public OncePerRequestFilter filter(){
+        return new SnakeCaseParamFilter();
     }
 }

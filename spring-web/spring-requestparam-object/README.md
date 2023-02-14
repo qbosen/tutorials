@@ -8,6 +8,7 @@
 - 需要确认的问题
     - Spring MVC 正常工作
     - OpenAPI 相关工具 正常工作
+    - name strategy 问题
 - 测试工程
     - https://github.com/qbosen/tutorials/spring-web/spring-requestparam-object
 
@@ -26,6 +27,8 @@
    
   }
   ```
+  
+- **命名策略问题** 通过 filter 将 snake_case 的参数转换一下，再转交 spring 进行bean映射
 
 - JSONPath 语法
     - [JSONPath Syntax | AlertSite Documentation](https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html)

@@ -20,10 +20,15 @@ public class RequestParamObjectController {
     public Result query(
             @RequestParam(required = false) String query,
             @RequestParam(name = "nest.filter", required = false) String filter,
+            @RequestParam(name = "nameCase.camelCase", required = false) String camelCase,
+            @RequestParam(name = "name_case.snake_case", required = false) String snakeCase,
             @RequestParam(required = false) int page,
             @RequestParam(required = false) int size
     ) {
-        Query cmd = Query.builder().query(query).nest(new NestQuery(filter)).page(page).size(size).build();
+        Query cmd = Query.builder().query(query)
+                .nest(new NestQuery(filter))
+                .nameCase(new NameCase(camelCase, snakeCase))
+                .page(page).size(size).build();
         return new Result(cmd, "request-param");
     }
 
@@ -40,6 +45,7 @@ public class RequestParamObjectController {
         @Schema(description = "query name")
         String query;
         NestQuery nest;
+        NameCase nameCase;
         int page;
         int size;
     }
@@ -52,6 +58,18 @@ public class RequestParamObjectController {
         @Schema(description = "nest query filter")
         String filter;
     }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class NameCase {
+        @Schema(description = "request param is camelCase")
+        String camelCase;
+        @Schema(description = "request param is snakeCase")
+        String snakeCase;
+    }
+
 
     @Value
     public static class Result {
